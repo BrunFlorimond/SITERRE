@@ -28,7 +28,6 @@ executable siterre-exe
                      , siterre
                      , combinat
                      , hspec
-                     , hmatrix-glpk
   default-language:    Haskell2010
 
 test-suite siterre-test

@@ -4,5 +4,4 @@ packages:
 - '.'
 extra-deps:
 - combinat-0.2.8.1
-- hmatrix-glpk-0.5.0.0
 resolver: lts-5.11
