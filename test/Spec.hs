@@ -1,9 +1,9 @@
 module Test where
 
-import Test.Hspec
-import qualified Data.Map as M
-import Data.Maybe (fromJust)
-import Main
+import qualified Data.Map   as M
+import           Data.Maybe (fromJust)
+import           Main
+import           Test.Hspec
 
 emptyMateriau = (M.empty :: M.Map Carac CaracValeur)
 emptyIngredient = (M.empty :: M.Map Carac Agreg)
@@ -157,3 +157,23 @@ main = hspec $ do
       shouldBe (dispatch (Tonne 25.59) [Gisement materiau1 loc (Tonne 15.789),Gisement materiau2 loc (Tonne 3.879),Gisement materiau3 loc (Tonne 25.879)]) (Just [(Gisement materiau1 loc (Tonne 15.789),Just (Tonne 15.789)),(Gisement materiau2 loc (Tonne 3.879),Just (Tonne 3.879)),(Gisement materiau3 loc (Tonne 25.879),Just (Tonne (25.59-15.789-3.879)))])
     it "retourne le bon resultat avec trois gisements dont deux suffisants (en tonne)" $ do
       shouldBe (dispatch (Tonne 17.53) [Gisement materiau1 loc (Tonne 15.789),Gisement materiau2 loc (Tonne 3.879),Gisement materiau3 loc (Tonne 25.879)]) (Just [(Gisement materiau1 loc (Tonne 15.789),Just (Tonne 15.789)),(Gisement materiau2 loc (Tonne 3.879),Just (Tonne (17.53-15.789)))])
+    it "retourne le bon resultat avec 1 gisement en Volume" $ do
+      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 45)]) (Just [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 45),Just $ Tonne 30)])
+    it "retourne le bon resultat avec 1 gisement en Volume (volume < tonne avec densite forte)" $ do
+      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 25)]) (Just [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 25),Just $ Tonne 30)])
+    it "retourne Nothing avec 1 gisement en Volume insuffisant (volume < tonne avec densite forte)" $ do
+      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 19)]) Nothing
+    it "retourne le bon resultat avec 2 gisements en Volume (volume < tonne avec densite forte)" $ do
+      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 12),
+                                    Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 9)])
+        (Just [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 12),Just $ Tonne (12*1.5)),
+               (Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 9),Just $ Tonne (8*1.5))])
+    it "retourne Nothing avec 2 gisements en Volume insuffisants (volume < tonne avec densite forte)" $ do
+      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),
+                                    Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 9)])
+        Nothing
+    it "retourne le bon resultat avec 2 gisements (un en volume et un en Tonne) (volume < tonne avec densite forte)" $ do
+      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),
+                                    Gisement (M.fromList [(Nom,Id "mat1")]) loc (Tonne 19.5)])
+        (Just [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),Just $ Tonne (7*1.5)),
+               (Gisement (M.fromList [(Nom,Id "mat1")]) loc (Tonne 19.5),Just $ Tonne 19.5)])
