@@ -40,13 +40,13 @@ ingredientOK01 = M.fromList [(Nom, Append (Id "Mat2") 0.5),(Granu4, Arithmetic (
 
 ingredientOK02 = M.fromList [(Nom, Append (Id "Mat2") (1/5)), (Granu4, Arithmetic (Val 10) (1/5)),(Granu50, Geometric (Val 10) (1/5)),(MacroPo, Harmonic (Val 10) (1/5)),(Mo, Arithmetic (Val 10) (1/5)),(Azote, Geometric (Val 10) (1/5)),(Polsen, Harmonic (Val 10) (1/5)),(Cec, Quadratic (Val 10) (1/5)), (ReserveU, Quadratic (Val 10) (1/5))]
 
-ingredientOK03 = M.fromList [(Granu4, Arithmetic (Val 20) (2/5)),(Granu50, Geometric (Val 20) (2/5)),(MacroPo, Harmonic (Val 20) (2/5)),(Mo, Arithmetic (Val 30) (2/5)),(Azote, Geometric (Val 30) (2/5)),(Polsen, Harmonic (Val 30) (2/5)),(Cec,Quadratic (Val 20) (2/5)),(ReserveU,Quadratic (Val 30) (2/5))]
+ingredientOK03 = M.fromList [(Nom, Append (Id "Mat3") (2/5)),(Granu4, Arithmetic (Val 20) (2/5)),(Granu50, Geometric (Val 20) (2/5)),(MacroPo, Harmonic (Val 20) (2/5)),(Mo, Arithmetic (Val 30) (2/5)),(Azote, Geometric (Val 30) (2/5)),(Polsen, Harmonic (Val 30) (2/5)),(Cec,Quadratic (Val 20) (2/5)),(ReserveU,Quadratic (Val 30) (2/5))]
 
-ingredientOK04 = M.fromList [(Granu4, Arithmetic (Val 30) (2/5)),(Granu50, Geometric (Val 30) (2/5)),(MacroPo, Harmonic (Val 30) (2/5)),(Mo, Arithmetic (Val 20) (2/5)),(Azote, Geometric (Val 20) (2/5)),(Polsen, Harmonic (Val 20) (2/5)),(Cec,Quadratic (Val 30) (2/5)) ,(ReserveU,Quadratic (Val 20) (2/5))]
+ingredientOK04 = M.fromList [(Nom, Append (Id "Mat4") (2/5)),(Granu4, Arithmetic (Val 30) (2/5)),(Granu50, Geometric (Val 30) (2/5)),(MacroPo, Harmonic (Val 30) (2/5)),(Mo, Arithmetic (Val 20) (2/5)),(Azote, Geometric (Val 20) (2/5)),(Polsen, Harmonic (Val 20) (2/5)),(Cec,Quadratic (Val 30) (2/5)) ,(ReserveU,Quadratic (Val 20) (2/5))]
 
 materiauOK = M.fromList [(Nom, Id "Mat1 - Mat2"),(Granu4, (Val ((10+20)/2))),(Granu50, (Val $ exp (0.5 * log 10 + 0.5 * log 20) / 1)),(MacroPo, (Val (1/((0.5/10)+(0.5/20))))),(Mo, (Val ((10+20)/2))),(Azote, (Val $ exp (0.5 * log 10 + 0.5 * log 20) / 1)),(Polsen, (Val $ 1/((0.5/10)+(0.5/20)))),(Cec,(Val $ sqrt $ (10^2+20^2)/2)),(ReserveU, (Val $ sqrt $ (20^2+10^2)/2))]
 
-materiauOK01 = M.fromList [(Granu4, (Val $ 10*(1/5)+20*(2/5)+30*(2/5))),(Granu50, (Val $ exp (((1/5) * log 10 + (2/5) * log 20 + (2/5) * log 30)/(1/5+2/5+2/5)))),(MacroPo, (Val $ 1/(((1/5)/10)+((2/5)/20)+((2/5)/30)))),(Mo, (Val $ 10*(1/5)+20*(2/5)+30*(2/5))),(Azote, (Val $ exp ((1/5) * log 10 + (2/5) * log 20 + (2/5) * log 30))),(Polsen, (Val $ 1/(((1/5)/10)+((2/5)/20)+((2/5)/30)))),(Cec,(Val $ sqrt $ (10^2) * (1/5)+(20^2) * (2/5) + (30^2)* (2/5))),(ReserveU,(Val$  sqrt $ (10^2) * (1/5)+(20^2) * (2/5) + (30^2)* (2/5)))]
+materiauOK01 = M.fromList [(Nom, Id "Mat2 - Mat3 - Mat4"),(Granu4, (Val $ 10*(1/5)+20*(2/5)+30*(2/5))),(Granu50, (Val $ exp (((1/5) * log 10 + (2/5) * log 20 + (2/5) * log 30)/(1/5+2/5+2/5)))),(MacroPo, (Val $ 1/(((1/5)/10)+((2/5)/20)+((2/5)/30)))),(Mo, (Val $ 10*(1/5)+20*(2/5)+30*(2/5))),(Azote, (Val $ exp ((1/5) * log 10 + (2/5) * log 20 + (2/5) * log 30))),(Polsen, (Val $ 1/(((1/5)/10)+((2/5)/20)+((2/5)/30)))),(Cec,(Val $ sqrt $ (10^2) * (1/5)+(20^2) * (2/5) + (30^2)* (2/5))),(ReserveU,(Val$  sqrt $ (10^2) * (1/5)+(20^2) * (2/5) + (30^2)* (2/5)))]
 
 
 qt0 = Tonne 0
@@ -124,7 +124,7 @@ main = hspec $ do
            it "retourne Nothing s'il n'y a pas de materiau à mélanger" $ do
              shouldBe (verifierPresence [gisement1,gisement2,gisement3,gisement4] ([],Just materiau1)) Nothing
            it "retourne Nothing si l'un des ingredients n'a pas de champs Nom" $ do
-             shouldBe (verifierPresence [gisement1,gisement2,gisement3,gisement4] ([ingredientOK01,ingredientOK02,ingredientOK03],Just materiau1)) Nothing
+             shouldBe (verifierPresence [gisement1,gisement2,gisement3,gisement4] ([ingredientOK01,ingredient1',ingredientOK03],Just materiau1)) Nothing
            it "retourne Nothing si l'un des gisements n'a pas de champs Nom" $ do
              shouldBe (verifierPresence [gisement1,gisement2,gisement3,gisement4,gisementSansNom] ([ingredientOK01,ingredientOK02],Just materiau1)) Nothing
            it "retourne Just True si chaque ingredient a son gisement" $ do
@@ -170,3 +170,23 @@ main = hspec $ do
                                     Gisement (M.fromList [(Nom,Id "mat1")]) loc (Tonne 19.5)])
         [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),Just $ Tonne (7*1.5)),
                (Gisement (M.fromList [(Nom,Id "mat1")]) loc (Tonne 19.5),Just $ Tonne 19.5)]
+  describe "Pour un mélange donné assigne une quantité de matériau pour chaque ingrédient du mélange et selon les gisements disponibles" $ do
+    it "retourne un tuple avec une liste vide et nothing si le materiau est en Nothing" $ do
+      shouldBe (assignerQuantite [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),Gisement (M.fromList [(Nom,Id "mat1")]) loc (Tonne 19.5)] (Tonne 30) ([],Nothing)) ([],Nothing)
+    it "retourne le tuple avec une liste d'assignement gisement/quantite vide s'il n'y a pas de gisement disponible" $ do
+      shouldBe (assignerQuantite [] (Tonne 30) ([ingredientOK],Just materiau1)) ([(ingredientOK,[])],Just materiau1)
+    it "retourne le tuple avec une liste d'assignement gisement/quantite vide si la quantite est a 0" $ do
+      shouldBe (assignerQuantite [Gisement materiau1 loc (Tonne 500)] (Tonne 0) ([ingredientOK],Just materiau1)) ([(ingredientOK,[])],Just materiau1)
+    it "retourne le tuple avec une liste d'assignement gisement/quantite vide si la quantite est negative" $ do
+      shouldBe (assignerQuantite [Gisement materiau1 loc (Tonne 500)] (Tonne (-50)) ([ingredientOK],Just materiau1)) ([(ingredientOK,[])],Just materiau1)
+    it "retourne le tuple avec une liste d'assignement ingredient/gisement/quantite vide si la liste d'ingrédient est vide" $ do
+      shouldBe (assignerQuantite [Gisement materiau1 loc (Tonne 500)] (Tonne (50)) ([],Just materiau1)) ([],Just materiau1)
+    it "retourne le tuple juste avec un gisement pour un ingrédient" $ do
+      shouldBe (assignerQuantite [Gisement materiau1 loc (Tonne 500)] (Tonne (50)) ([ingredientOK],Just materiau1)) ([(ingredientOK,[(Gisement materiau1 loc (Tonne 500),Just $ Tonne 25)])],Just materiau1)
+    it "retourne le tuple juste avec deux gisements pour un ingrédient (avec distances différentes)" $ do
+      shouldBe (assignerQuantite [Gisement materiau1 loc (Tonne 12),Gisement materiau1 loc2 (Tonne 14)] (Tonne 50) ([ingredientOK],Just materiau1)) ([(ingredientOK,[(Gisement materiau1 loc (Tonne 12),Just $ Tonne 12),(Gisement materiau1 loc2 (Tonne 14),Just $ Tonne 13)])],Just materiau1)
+    it "retourne le tuple avec un gisement pour deux ingrédients (ne doit pas subvenir)" $ do
+      shouldBe (assignerQuantite [Gisement materiau1 loc (Tonne 50)] (Tonne 50) ([ingredientOK,ingredientOK01],Just materiau1)) ([(ingredientOK,[(Gisement materiau1 loc (Tonne 50),Just $ Tonne 25)]),(ingredientOK01,[])],Just materiau1)
+    it "retourne le tuple avec plusieurs gisements pour plusieurs ingrédients" $ do
+      shouldBe (assignerQuantite [Gisement materiau2 loc3 (Tonne 50),Gisement materiau2 loc (Tonne 2),Gisement materiau3 loc (Tonne 50), Gisement materiau4 loc (Tonne 50)] (Tonne 50) ([ingredientOK02,ingredientOK03,ingredientOK04],Just materiauOK01)) ([(ingredientOK02,[(Gisement materiau2 loc (Tonne 2),Just $ Tonne 2),(Gisement materiau2 loc3 (Tonne 50),Just $ Tonne 8)]),(ingredientOK03,[(Gisement materiau3 loc (Tonne 50),Just $ Tonne 20)]),(ingredientOK04,[(Gisement materiau4 loc (Tonne 50),Just $ Tonne 20)])],Just materiauOK01)
+
