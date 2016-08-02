@@ -298,11 +298,13 @@ assignerQuantite :: [Gisement] -> Quantite -> ([Ingredient],Maybe Materiau) -> (
 assignerQuantite _ _ (_,Nothing) = ([],Nothing)
 assignerQuantite xs q (ys,mat) = (map dispatcherQuantite ys, mat)
                                    where dispatcherQuantite :: Ingredient -> (Ingredient,[(Gisement,Maybe Quantite)])
-                                         dispatcherQuantite ing = (ing, (dispatch (quantiteNecessaire ing) (filter (materiauNecessaire ing) xs)) )
+                                         dispatcherQuantite ing = (ing, (dispatch (quantiteNecessaire ing) (filteredOrdered ing)))
+                                         filteredOrdered ing = L.sortOn (\(Gisement _ l _) -> l) (filter (materiauNecessaire ing) xs)
                                          materiauNecessaire :: Ingredient -> Gisement -> Bool
                                          materiauNecessaire ing' gi' = nom ing' == nom gi'
                                          quantiteNecessaire :: Ingredient -> Maybe Quantite
                                          quantiteNecessaire ing' = multScal <$> (proportion ing') <*> (enTonne q ing')
+
 
 -- Produit la proportion d'un ingredient
 proportion :: Ingredient -> Maybe Double
