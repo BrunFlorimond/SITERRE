@@ -6,6 +6,7 @@ import qualified Control.Monad      as Mo
 import qualified Data.Foldable      as F
 import qualified Data.List          as L
 import qualified Data.Map           as M
+import qualified Control.Applicative as A
 import           Lib
 import           Math.Combinat.Sets (choose)
 
@@ -156,7 +157,7 @@ instance Sol Gisement where
   enTonne x (Gisement mat _ _) = enTonne x mat
   enVolume x (Gisement mat _ _) = enVolume x mat
 
-
+data Params = Params Int deriving (Eq,Show)
 
 -- | Fonctions
 
@@ -273,15 +274,15 @@ creeProportion d xs = concatMap prop xs
      -- | Ecran 2
 
       --   ecran2 :: ([([Ingredient], materiau)],[materiau]) -> ()
-{--
-estimationSocioEco :: [([Ingredient],Maybe Materiau)] -> [Gisement] -> Quantite -> [([(Ingredient,(Gisement,Quantite))],Maybe Materiau,SocEco)]
-estimationSocioEco ec1 gi q param = calculCouts $ map verifierDispo ec1
-                                where verifierDispo :: ([Ingredient],Maybe Materiau) -> Maybe ([(Ingredient,Quantite)],Materiau)
-                                      verifierDispo (_,Nothing) = Nothing
-                                      verifierDispo (ys,_) =  (filterM (verifierPresence gi) ys) >>= (verifierQuantite gi q)
-                                      calculCouts :: [([Ingredient],Maybe Materiau)] -> Params -> [([Ingredient],Maybe Materiau,SocEco)]
 
---}
+
+--estimationSocioEco :: [([Ingredient],Maybe Materiau)] -> [Gisement] -> Quantite -> Params -> [([(Ingredient,(Gisement,Quantite))],Maybe Materiau,SocEco)]
+--estimationSocioEco ec1 gi q param = calculCouts $ map (assignerQuantite gi q) =<< (Mo.filterM (verifierPresence gi) ec1)
+
+
+
+--calculCouts :: [([Ingredient],Maybe Materiau)] -> Params -> [([Ingredient],Maybe Materiau,SocEco)]
+calculCouts a = []
 
 -- Verifie que chaque Ingredient dispose d'au moins un gisement disposant du meme materiau
 verifierPresence :: [Gisement] -> ([Ingredient],Maybe Materiau) -> Maybe Bool
@@ -292,33 +293,38 @@ verifierPresence xs (ys,_) = and <$> sequenceA (map (verPres xs) ys)
                                  where verPres :: [Gisement] -> Ingredient -> Maybe Bool
                                        verPres xs ing = elem <$> (nom ing) <*> (sequenceA $ map nom xs)
 
-{--
-verifierQuantite :: [Gisement] -> Quantite -> ([Ingredient],Maybe Materiau) -> Maybe ([(Ingredient,[(Gisement,Quantite)])],Maybe Materiau)
-verifierQuantite _ _ (_,Nothing) = Nothing
-verifierQuantite xs q (ys,mat) = map dispatcherQuantite ys
-                                   where dispatcherQuantite :: Ingredient -> [Gisement] --[(Gisement,Quantite)]
-                                         dispatcherQuantite ing = {--(A.liftA2 dispatch (quantiteNecessaire ing)--} (Just (filter (materiauNecessaire ing) xs))
---                                   where dispatcherQuantite :: Ingredient -> (Ingredient,[(Gisement,Quantite)])
---                                         dispatcherQuantite ing = (,) <$> ing <*> (A.liftA2 dispatch (quantiteNecessaire ing) (Just (filter (materiauNecessaire ing) xs)))
+-- Assigne une quantité de materiau a extraire pour chaque Gisement en prenant le gisement le plus proche en premier
+assignerQuantite :: [Gisement] -> Quantite -> ([Ingredient],Maybe Materiau) -> ([(Ingredient,[(Gisement,Maybe Quantite)])],Maybe Materiau)
+assignerQuantite _ _ (_,Nothing) = ([],Nothing)
+assignerQuantite xs q (ys,mat) = (map dispatcherQuantite ys, mat)
+                                   where dispatcherQuantite :: Ingredient -> (Ingredient,[(Gisement,Maybe Quantite)])
+                                         dispatcherQuantite ing = (ing, (dispatch (quantiteNecessaire ing) (filter (materiauNecessaire ing) xs)) )
                                          materiauNecessaire :: Ingredient -> Gisement -> Bool
                                          materiauNecessaire ing' gi' = nom ing' == nom gi'
                                          quantiteNecessaire :: Ingredient -> Maybe Quantite
                                          quantiteNecessaire ing' = multScal <$> (proportion ing') <*> (enTonne q ing')
---}
 
-dispatch :: Quantite -> [Gisement] -> Maybe [(Gisement,Maybe Quantite)]
-dispatch _ [] = Nothing
+-- Produit la proportion d'un ingredient
+proportion :: Ingredient -> Maybe Double
+proportion ing = case M.lookup Nom ing of
+                     Just (Append _ prop) -> Just prop
+                     _ -> Nothing
+
+
+dispatch :: Maybe Quantite -> [Gisement] -> [(Gisement,Maybe Quantite)]
+dispatch _ [] = []
+dispatch Nothing _ = []
 dispatch q xs = case q of
-                   (Volume _) -> Nothing
-                   (Tonne x) -> case compare x 0 of
-                                    GT -> dispatch' xs [] (Just (Tonne 0)) q
-                                    _ -> Nothing
+                   Just (Volume _) -> []
+                   Just (Tonne x) -> case compare x 0 of
+                                      GT -> dispatch' xs [] (Just (Tonne 0)) q
+                                      _ -> []
 
-dispatch' :: [Gisement] -> [(Gisement,Maybe Quantite)] -> Maybe Quantite -> Quantite -> Maybe [(Gisement, Maybe Quantite)]
-dispatch' _ _ Nothing _ = Nothing
-dispatch' [] res acc q  | acc >= Just q = Just (reverse res)
-                        | otherwise = Nothing
-dispatch' xs' res acc q | acc >= Just q = Just (reverse res)
+dispatch' :: [Gisement] -> [(Gisement,Maybe Quantite)] -> Maybe Quantite -> Maybe Quantite -> [(Gisement, Maybe Quantite)]
+dispatch' _ _ Nothing _ = []
+dispatch' [] res acc q  | acc >=  q = reverse res
+                        | otherwise = []
+dispatch' xs' res acc q | acc >=  q = reverse res
                         | otherwise = dispatch' (tail xs') ((head xs',qty') : res) (Mo.join $ addVec <$> qty' <*> acc) q
                                        where qty :: Gisement -> Maybe Quantite -> Maybe Quantite
                                              qty (Gisement mat loc quantGis) acc =
@@ -329,48 +335,13 @@ dispatch' xs' res acc q | acc >= Just q = Just (reverse res)
                                                 _ -> Nothing
                                              qty' = qty (head xs') acc
                                              restantNecessaire :: Maybe Quantite
-                                             restantNecessaire = Mo.join $ (addVec q) <$> (neg <$> acc)
+                                             restantNecessaire = Mo.join $ addVec <$> q <*> (neg <$> acc)
 
 safeCompare :: Quantite -> Quantite -> Maybe Ordering
 safeCompare (Volume x) (Volume y) = Just $ compare x y
 safeCompare (Tonne x) (Tonne y) = Just $ compare x y
 safeCompare _ _= Nothing
 
-{--
-verifierQuantite :: [Gisement] -> Quantite -> ([Ingredient],Maybe Materiau) -> Maybe ([(Ingredient,Quantite)],Maybe Materiau,SocEco)
-verifierQuantite xs q (ys,mat) | verifQuantiteTotale > Just LT = Nothing --estimer les quantites
-                               | otherwise = Nothing
-                                      where verifQuantiteTotale :: Maybe Ordering
-                                            verifQuantiteTotale  = (F.foldrM aggQuantite (Tonne 0) xs) >>= (compareQte q)
---}
--- Produit la proportion d'un ingredient
-proportion :: Ingredient -> Maybe Double
-proportion ing = case M.lookup Nom ing of
-                     Just (Append _ prop) -> Just prop
-                     _ -> Nothing
-
--- Additionne une quantité et la quantité d'un gisement
--- Produit Nothing si
-aggQuantite :: Gisement -> Quantite -> Maybe Quantite
-aggQuantite (Gisement _ _ (Tonne x)) (Tonne y) = Just $ Tonne $ x+y
-aggQuantite (Gisement mat _ (Volume x)) (Tonne y) = case valeur Densite mat of
-                Just (Val z) -> Just $ Tonne $ x*z + y
-                _ -> Nothing
-
-
--- Compare 2 quantités
-compareQte :: Quantite -> Quantite -> Maybe Ordering
-compareQte (Tonne x) (Tonne y) = case x > y of
-                                    True -> Just GT
-                                    False -> case x < y of
-                                      True -> Just LT
-                                      False -> Just EQ
-compareQte (Volume x) (Volume y) = case x > y of
-                                     True -> Just GT
-                                     False -> case x < y of
-                                       True -> Just LT
-                                       False -> Just EQ
-compareQte _ _ = Nothing
 
 {--
 

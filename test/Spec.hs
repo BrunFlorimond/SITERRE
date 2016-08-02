@@ -131,49 +131,42 @@ main = hspec $ do
              shouldBe (verifierPresence [gisement1,gisement2,gisement3,gisement4] ([ingredientOK,ingredientOK02],Just materiau1)) (Just True)
            it "retourne Just False car un gisement manque" $ do
              shouldBe (verifierPresence [gisement1,gisement3,gisement4] ([ingredientOK,ingredientOK02],Just materiau1)) (Just False)
-  describe "test de la fonction d'agglomération de quantités avec gisement" $ do
-    it "returne Nothing si le gisement n'a pas de densité et la quantité est en volume" $ do
-      shouldBe (aggQuantite (Gisement materiau1 (Localisation "ici" 5)  (Volume 10)) (Tonne 10)) (Nothing)
-    it "retourne l'addition des quantités si les deux valeurs sont en volume meme s'il n'y a pas de densité indiquée pour le materiau du gisement" $ do
-      shouldBe (aggQuantite (Gisement materiau1 (Localisation "ici" 5)  (Tonne 10)) (Tonne 10)) (Just $ Tonne 20)
-    it "retourne l'addition des quantités (avec transformation du volume en tonne)" $ do
-      shouldBe (aggQuantite (Gisement materiau5 (Localisation "ici" 5) (Volume 10)) (Tonne 10)) (Just $ Tonne 25)
   describe "test de la fonction d'assignation de quantité à chaque gisement" $ do
-    it "retourne Nothing si la liste de gisement est vide" $ do
-      shouldBe (dispatch (Tonne 30) []) Nothing
-    it "retourne Nothing si la quantite necessaire est  égale a 0" $ do
-      shouldBe (dispatch (Tonne 0) [gisement5,gisement5,gisement5]) (Nothing)
-    it "retourne Nothing si la quantite necessaire est négative" $ do
-      shouldBe (dispatch (Tonne (-5)) [gisement5,gisement5,gisement5]) (Nothing)
-    it "retourne Nothing si la quantite necessaire est exprimee en Volume" $ do
-      shouldBe (dispatch (Volume 30) [gisement5,gisement5,gisement5]) (Nothing)
-    it "retourne Nothing s'il n'y a pas assez de quantite dans les gisements" $ do
-      shouldBe (dispatch (Tonne 555.5) [gisement1,gisement2,gisement3]) Nothing
+    it "retourne [] si la liste de gisement est vide" $ do
+      shouldBe (dispatch (Just $ Tonne 30) []) []
+    it "retourne [] si la quantite necessaire est  égale a 0" $ do
+      shouldBe (dispatch (Just $ Tonne 0) [gisement5,gisement5,gisement5]) []
+    it "retourne [] si la quantite necessaire est négative" $ do
+      shouldBe (dispatch (Just $ Tonne (-5)) [gisement5,gisement5,gisement5]) []
+    it "retourne [] si la quantite necessaire est exprimee en Volume" $ do
+      shouldBe (dispatch (Just $ Volume 30) [gisement5,gisement5,gisement5]) []
+    it "retourne [] s'il n'y a pas assez de quantite dans les gisements" $ do
+      shouldBe (dispatch (Just $ Tonne 555.5) [gisement1,gisement2,gisement3]) []
     it "retourne le bon resultat avec un seul gisement suffisant (en tonne)" $ do
-      shouldBe (dispatch (Tonne 25.59) [Gisement materiau1 loc (Tonne 86.25879)]) (Just [(Gisement materiau1 loc (Tonne 86.25879),Just (Tonne 25.59))])
+      shouldBe (dispatch (Just $ Tonne 25.59) [Gisement materiau1 loc (Tonne 86.25879)]) [(Gisement materiau1 loc (Tonne 86.25879),Just (Tonne 25.59))]
     it "retourne le bon resultat avec deux gisements suffisants (en tonne)" $ do
-      shouldBe (dispatch (Tonne 25.59) [Gisement materiau1 loc (Tonne 15.789),Gisement materiau2 loc (Tonne 57.236)]) (Just [(Gisement materiau1 loc (Tonne 15.789),Just (Tonne 15.789)),(Gisement materiau2 loc (Tonne 57.236),Just (Tonne (25.59-15.789)))])
+      shouldBe (dispatch (Just $ Tonne 25.59) [Gisement materiau1 loc (Tonne 15.789),Gisement materiau2 loc (Tonne 57.236)]) [(Gisement materiau1 loc (Tonne 15.789),Just (Tonne 15.789)),(Gisement materiau2 loc (Tonne 57.236),Just (Tonne (25.59-15.789)))]
     it "retourne le bon resultat avec trois gisements suffisants (en tonne)" $ do
-      shouldBe (dispatch (Tonne 25.59) [Gisement materiau1 loc (Tonne 15.789),Gisement materiau2 loc (Tonne 3.879),Gisement materiau3 loc (Tonne 25.879)]) (Just [(Gisement materiau1 loc (Tonne 15.789),Just (Tonne 15.789)),(Gisement materiau2 loc (Tonne 3.879),Just (Tonne 3.879)),(Gisement materiau3 loc (Tonne 25.879),Just (Tonne (25.59-15.789-3.879)))])
+      shouldBe (dispatch (Just $ Tonne 25.59) [Gisement materiau1 loc (Tonne 15.789),Gisement materiau2 loc (Tonne 3.879),Gisement materiau3 loc (Tonne 25.879)]) [(Gisement materiau1 loc (Tonne 15.789),Just (Tonne 15.789)),(Gisement materiau2 loc (Tonne 3.879),Just (Tonne 3.879)),(Gisement materiau3 loc (Tonne 25.879),Just (Tonne (25.59-15.789-3.879)))]
     it "retourne le bon resultat avec trois gisements dont deux suffisants (en tonne)" $ do
-      shouldBe (dispatch (Tonne 17.53) [Gisement materiau1 loc (Tonne 15.789),Gisement materiau2 loc (Tonne 3.879),Gisement materiau3 loc (Tonne 25.879)]) (Just [(Gisement materiau1 loc (Tonne 15.789),Just (Tonne 15.789)),(Gisement materiau2 loc (Tonne 3.879),Just (Tonne (17.53-15.789)))])
+      shouldBe (dispatch (Just $ Tonne 17.53) [Gisement materiau1 loc (Tonne 15.789),Gisement materiau2 loc (Tonne 3.879),Gisement materiau3 loc (Tonne 25.879)]) [(Gisement materiau1 loc (Tonne 15.789),Just (Tonne 15.789)),(Gisement materiau2 loc (Tonne 3.879),Just (Tonne (17.53-15.789)))]
     it "retourne le bon resultat avec 1 gisement en Volume" $ do
-      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 45)]) (Just [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 45),Just $ Tonne 30)])
+      shouldBe (dispatch (Just $ Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 45)]) [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 45),Just $ Tonne 30)]
     it "retourne le bon resultat avec 1 gisement en Volume (volume < tonne avec densite forte)" $ do
-      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 25)]) (Just [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 25),Just $ Tonne 30)])
-    it "retourne Nothing avec 1 gisement en Volume insuffisant (volume < tonne avec densite forte)" $ do
-      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 19)]) Nothing
+      shouldBe (dispatch (Just $ Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 25)]) [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 25),Just $ Tonne 30)]
+    it "retourne [] avec 1 gisement en Volume insuffisant (volume < tonne avec densite forte)" $ do
+      shouldBe (dispatch (Just $ Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 19)]) []
     it "retourne le bon resultat avec 2 gisements en Volume (volume < tonne avec densite forte)" $ do
-      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 12),
+      shouldBe (dispatch (Just $ Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 12),
                                     Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 9)])
-        (Just [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 12),Just $ Tonne (12*1.5)),
-               (Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 9),Just $ Tonne (8*1.5))])
-    it "retourne Nothing avec 2 gisements en Volume insuffisants (volume < tonne avec densite forte)" $ do
-      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),
+        [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 12),Just $ Tonne (12*1.5)),
+               (Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 9),Just $ Tonne (8*1.5))]
+    it "retourne [] avec 2 gisements en Volume insuffisants (volume < tonne avec densite forte)" $ do
+      shouldBe (dispatch (Just $ Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),
                                     Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 9)])
-        Nothing
+        []
     it "retourne le bon resultat avec 2 gisements (un en volume et un en Tonne) (volume < tonne avec densite forte)" $ do
-      shouldBe (dispatch (Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),
+      shouldBe (dispatch (Just $ Tonne 30) [Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),
                                     Gisement (M.fromList [(Nom,Id "mat1")]) loc (Tonne 19.5)])
-        (Just [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),Just $ Tonne (7*1.5)),
-               (Gisement (M.fromList [(Nom,Id "mat1")]) loc (Tonne 19.5),Just $ Tonne 19.5)])
+        [(Gisement (M.fromList [(Nom,Id "mat1"),(Densite,Val 1.5)]) loc (Volume 7),Just $ Tonne (7*1.5)),
+               (Gisement (M.fromList [(Nom,Id "mat1")]) loc (Tonne 19.5),Just $ Tonne 19.5)]
